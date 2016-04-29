@@ -1,0 +1,4 @@
+scipy==0.17.0
+scikit-image==0.12.3
+Flask==0.10.1
+Flask-Script==2.0.5

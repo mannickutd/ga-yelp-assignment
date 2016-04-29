@@ -1,0 +1,2 @@
+#!/bin/bash
+python app.py test_classifier -c cnn -l 0 -d "/Users/nicholasstaples/Downloads/yelp kaggle/classifiers/cnn/0/" -o "/Users/nicholasstaples/Downloads/yelp kaggle/results/10_percent_learned_cnn_classifier.csv"
