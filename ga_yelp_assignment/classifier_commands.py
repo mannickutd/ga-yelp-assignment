@@ -27,7 +27,7 @@ available_classifiers = {
 def get_classifier(classifier, create_new, directory):
     if classifier not in available_classifiers:
             raise Exception(
-                "Invalid classifier name supplied must be one of ({})".format(
+                "Invalid classifier name supplied must be one of ({0})".format(
                     ', '.join(available_classifiers)))
     if not create_new:
         return load_model(directory)
@@ -59,7 +59,7 @@ def _validate_start_and_finish(start, finish):
     return start, finish
 
 
-def _split_train_test_dict(photo_label_dict, start=None, finish=None, test_size=0.8, random_state=5):
+def _split_train_test_dict(photo_label_dict, start=None, finish=None, test_size=0.2, random_state=5):
     # Seed the random state so we can process the list one by one.
     X_train, X_test, y_train, y_test = cross_validation.train_test_split(
         list(photo_label_dict.keys()),
@@ -75,6 +75,10 @@ def _split_train_test_dict(photo_label_dict, start=None, finish=None, test_size=
         start = 0
         finish = len(X_train)
     return OrderedDict(zip(X_train[start:finish], y_train[start:finish])), OrderedDict(zip(X_test, y_test))
+
+
+def _combine_values(existing_vals, val, label):
+    return ' '.join(sorted((existing_vals.split() + [label]))) if val == '1' else existing_vals
 
 
 class LoadTrainSaveClassifier(Command):
@@ -123,10 +127,10 @@ class LoadTrainSaveClassifier(Command):
 class LoadTestClassifier(Command):
 
     option_list = (
-        Option('--classifier', '-c', dest='classifier'),
-        Option('--dir', '-d', dest='directory'),
-        Option('--label', '-l', dest='label'),
-        Option('--out', '-o', dest='output')
+        Option('--classifier', '-c', dest='classifier', help="The classifier to use"),
+        Option('--dir', '-d', dest='directory', help=""),
+        Option('--label', '-l', dest='label', help=""),
+        Option('--out', '-o', dest='output', help="")
     )
 
     def run(self, classifier, directory, label, output):
@@ -149,19 +153,18 @@ class LoadTestClassifier(Command):
             writer = csv.writer(csvfile)
             writer.writerow(['file_name', 'true', 'predicted'])
             # Store predicted versus actual
-            pred_vals = []
-            true_vals = []
             for images, values, file_names in gen_:
-                pred_vals.extend(clsf.predict(images))
-                true_vals.extend(values)
-            # Store the files
-            writer.writerows(zip(file_names, true_vals, pred_vals))
+                pred_vals = clsf.predict(images)
+                true_vals = values
+                file_names = [x.rsplit('/', maxsplit=1)[1] for x in file_names]
+                # Store the files
+                writer.writerows(zip(file_names, true_vals, pred_vals))
 
 
 class CalculateLabelMetrics(Command):
     # http://scikit-learn.org/stable/modules/classes.html#sklearn-metrics-metrics
     option_list = (
-        Option('--in', '-i', dest='infile'),
+        Option('--in', '-i', dest='infile', help=""),
     )
 
     def run(self, infile):
@@ -171,7 +174,7 @@ class CalculateLabelMetrics(Command):
             reader = csv.reader(csvfile)
             rows = [x for x in reader]
             rows = rows[1:]
-            file_names, pred_vals, true_vals = zip(*rows)
+            file_names, true_vals, pred_vals = zip(*rows)
 
         pred_vals = np.array(pred_vals)
         true_vals = np.array(true_vals)
@@ -179,3 +182,38 @@ class CalculateLabelMetrics(Command):
         print('Precision: {0:f}'.format(metrics.precision_score(true_vals, pred_vals, pos_label='1')))
         print('Recall: {0:f}'.format(metrics.recall_score(true_vals, pred_vals, pos_label='1')))
         print('Accuracy: {0:f}'.format(metrics.accuracy_score(true_vals, pred_vals)))
+
+
+class CombineCSVFiles(Command):
+    option_list = (
+        Option('--in', '-i', dest='infile', help="The csv to append to the existing csv file"),
+        Option('--label', '-l', dest='label', help=""),
+        Option('--out', '-o', dest='outfile'),
+        Option('--existing', '-e', dest='existing', help="An existing csv to combine with.")
+    )
+
+    def run(self, infile, label, outfile, existing=None):
+        existing_rows = {}
+        if existing:
+            with open(existing, 'rU') as csvfile:
+                reader = csv.reader(csvfile)
+                existing_rows = dict([(x[0], x[1:]) for x in reader])
+        with open(infile, 'rU') as csvfile:
+            reader = csv.reader(csvfile)
+            # Ignore the header
+            next(reader)
+            for file_name, true_val, pred_val in reader:
+                if existing and file_name not in existing_rows:
+                    raise Exception(
+                        "The file name ({0}) doesn't exist in the existing file.".format(file_name))
+                if not existing:
+                    existing_rows[file_name] = ['', '']
+                existing_rows[file_name] = (
+                    _combine_values(existing_rows[file_name][0], true_val, label),
+                    _combine_values(existing_rows[file_name][1], pred_val, label)
+                )
+        with open(outfile, 'w') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['file_name', 'true', 'predicted'])
+            for k, v in existing_rows.items():
+                writer.writerow((k, *v))

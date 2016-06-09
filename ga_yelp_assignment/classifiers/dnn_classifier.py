@@ -3,8 +3,8 @@ from flask import current_app
 
 
 def my_model(X, y):
-    """This is DNN with 10, 20, 10 hidden layers, and dropout of 0.1 probability."""
-    layers = skflow.ops.dnn(X, [10, 20, 10], dropout=0.1)
+    """This is DNN with 1000, 2000, 1000 hidden layers, and dropout of 0.01 probability."""
+    layers = skflow.ops.dnn(X, [100, 1000, 2000, 1000, 100], dropout=0.01)
     return skflow.models.logistic_regression(layers, y)
 
 

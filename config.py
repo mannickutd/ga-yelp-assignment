@@ -20,13 +20,13 @@ class Config(object):
     LABEL_8 = "GOOD_FOR_KIDS"
 
     # Classifier variables
-    IMAGE_X_DIM = 56
-    IMAGE_Y_DIM = 56
-    CLASSIFIER_LOG_DIR = os.environ['CLASSIFIER_LOG_DIR']
+    IMAGE_X_DIM = 28
+    IMAGE_Y_DIM = 28
+    #CLASSIFIER_LOG_DIR = os.environ['CLASSIFIER_LOG_DIR']
     # Stochastic gradient variables
     NUM_CLASSES = 10
     LEARNING_RATE = 0.01
     STEPS = 100
     # Tensorflow configuration
-    NUM_CORES = 1
+    NUM_CORES = 3
     GPU_MEMORY_FRACTION = 0.6

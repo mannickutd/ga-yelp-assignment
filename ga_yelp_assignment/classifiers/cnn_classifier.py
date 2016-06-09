@@ -3,7 +3,6 @@ import numpy as np
 import tensorflow as tf
 from sklearn import cross_validation, metrics
 from sklearn.datasets.base import Bunch
-from sklearn.utils import check_array
 from tensorflow.contrib import skflow
 from flask import current_app
 

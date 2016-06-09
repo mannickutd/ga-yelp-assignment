@@ -1,2 +1,2 @@
 #!/bin/bash
-python app.py train_classifier -c linear -l 0 -s 10 -f 20 -n False -d "/Users/nicholasstaples/Downloads/yelp kaggle/classifiers/linear/0/"
+python app.py train_classifier -c cnn -l 2 -s 0 -f 100 -n True -d "/Users/nicholasstaples/Downloads/yelp kaggle/classifiers/cnn/2/"

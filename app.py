@@ -8,7 +8,8 @@ from ga_yelp_assignment import create_app
 from ga_yelp_assignment.classifier_commands import (
     LoadTrainSaveClassifier,
     LoadTestClassifier,
-    CalculateLabelMetrics)
+    CalculateLabelMetrics,
+    CombineCSVFiles)
 from ga_yelp_assignment.commands import (
     LabelCounts,
     PhotoSizes)
@@ -28,6 +29,7 @@ manager.add_command("test_classifier", LoadTestClassifier())
 manager.add_command("labels_counts", LabelCounts())
 manager.add_command('photo_size_counts', PhotoSizes())
 manager.add_command('calculate_metrics', CalculateLabelMetrics())
+manager.add_command('combine_result_files', CombineCSVFiles())
 
 
 @manager.command
